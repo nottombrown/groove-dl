@@ -10,8 +10,13 @@ import os
 import subprocess
 import gzip
 import threading
+from optparse import OptionParser
 if sys.version_info[1] >= 6:  import json
 else: import simplejson as json
+
+parser = OptionParser()
+parser.add_option("-a", action="store_true", help="Automatically download the track with the best match", dest="auto_download")
+(cl_options, cl_args) = parser.parse_args()
 
 _useragent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.56 Safari/536.5"
 _token = None
@@ -116,7 +121,7 @@ def getStreamKeyFromSongIDs(id):
     return json.JSONDecoder().decode(gzip.GzipFile(fileobj=(StringIO.StringIO(conn.getresponse().read()))).read())["result"]
 
 #Add a song to the browser queue, used to imitate a browser
-def addSongsToQueue(songObj, songQueueID, source = "user"):    
+def addSongsToQueue(songObj, songQueueID, source = "user"):
     queueObj = {}
     queueObj["songID"] = songObj["SongID"]
     queueObj["artistID"] = songObj["ArtistID"]
@@ -193,7 +198,7 @@ if __name__ == "__main__":
     print entrystring #Print the welcome message
     print "Initializing..."
     getToken() #Get a static token
-    i = ' '.join(sys.argv[1:]) #Get the search parameter
+    i = cl_args[0] #Get the search parameter
     #i = raw_input("Search: ") #Same as above, if you uncomment this, and comment the first 4 lines this can be run entirely from the command line.
     print "Searching for '%s'..." % i
     m = 0
@@ -204,7 +209,11 @@ if __name__ == "__main__":
         exit()
     else:
         print '\n'.join(l) #Print the results
-    songid = raw_input("Enter the Song IDs you wish to download (separated with commas) or (q) to exit: ")
+
+    if cl_options.auto_download:
+      songid = "1"
+    else:
+      songid = raw_input("Enter the Song IDs you wish to download (separated with commas) or (q) to exit: ")
     if songid == "" or songid == "q": exit() #Exit if choice is empty or q
     inputtedIDs=songid.split(',')
 
